@@ -64,34 +64,59 @@ with tab2:
         st.write(data.isna().sum() / len(data) * 100)
 
     col1, col2 = st.columns(2)
+
     with col1:
-        st.subheader("Fill Missing Value")
+        st.subheader("Fill Missing Values")
         selectedColumn = st.multiselect(
-            "Select Columns", data.columns[data.isnull().any()]
+            "Select Columns for fill Value", data.columns[data.isnull().any()]
         )
-        fillby = st.selectbox(
-            "Select Value To Fill",
-            [
-                0,
-                1,
-                "Minimum Value",
-                "Maximum Value",
-                "Average Value",
-                "Most Accurant Value",
-            ],
-        )
+
+        fill_options = [
+            0,
+            1,
+            "Minimum Value",
+            "Maximum Value",
+            "Average Value",
+            "Most Accurant Value",
+        ]
+
+        fill_cat_options = [
+            0,
+            1,
+            "Most Accurant Value",
+        ]
+
+        userchoice = {}
+
+        categorical_columns = data.select_dtypes(include=["object", "category"]).columns
+
+        cat_columns = []
+        for i in categorical_columns:
+            if len(data[i].unique()) <= 15:
+                cat_columns.append(i)
+
+        for col in selectedColumn:
+            if col in cat_columns:
+                userchoice[col] = st.selectbox(
+                    f"Select option for fill {col}", fill_cat_options
+                )
+            else:
+                userchoice[col] = st.selectbox(
+                    f"Select option for fill {col}", fill_options
+                )
+
         for i in selectedColumn:
-            if fillby == 0:
+            if userchoice[i] == 0:
                 data[i].fillna(0, inplace=True)
-            elif fillby == 1:
+            elif userchoice[i] == 1:
                 data[i].fillna(1, inplace=True)
-            elif fillby == "Minimum Value":
+            elif userchoice[i] == "Minimum Value":
                 data[i].fillna(np.min(data[i]), inplace=True)
-            elif fillby == "Maximum Value":
+            elif userchoice[i] == "Maximum Value":
                 data[i].fillna(np.max(data[i]), inplace=True)
-            elif fillby == "Average Value":
+            elif userchoice[i] == "Average Value":
                 data[i].fillna(np.mean(data[i]), inplace=True)
-            elif fillby == "Most Accurant Value":
+            elif userchoice[i] == "Most Accurant Value":
                 data[i].fillna(data[i].mode()[0], inplace=True)
 
         st.dataframe(data)
